@@ -4,6 +4,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import ErrorBoundary from './components/ErrorBoundary';
 import HomePage from './pages/HomePage';
 import EventPage from './pages/EventPage';
 import CreateEventPage from './pages/CreateEventPage';
@@ -14,6 +15,9 @@ import { Role } from './types';
 import AuthModal from './components/AuthModal';
 import ForOrganizersPage from './pages/ForOrganizersPage';
 import BuyTicketPage from './pages/BuyTicketPage';
+import PerformanceDashboard from './components/PerformanceDashboard';
+import { logReactError } from './lib/errorHandler';
+import { useWebVitals } from './hooks/usePerformance';
 
 const OrganizerRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
@@ -35,10 +39,13 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 function AppRoutes() {
+  useWebVitals(); // Initialize web vitals monitoring
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <AuthModal />
+      <PerformanceDashboard />
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -94,11 +101,13 @@ function AppRoutes() {
 
 function App() {
   return (
-    <AuthProvider>
-      <HashRouter>
-        <AppRoutes />
-      </HashRouter>
-    </AuthProvider>
+    <ErrorBoundary onError={logReactError}>
+      <AuthProvider>
+        <HashRouter>
+          <AppRoutes />
+        </HashRouter>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

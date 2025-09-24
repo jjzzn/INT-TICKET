@@ -1,14 +1,19 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import EventCard from '../components/EventCard';
+import SearchFilter from '../components/SearchFilter';
+import Loading, { EventCardSkeleton } from '../components/Loading';
 import { Event } from '../types';
 import { supabase } from '../lib/supabaseClient';
+// import { usePerformance } from '../hooks/usePerformance';
 
 const HomePage: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
+  // const { measureRender } = usePerformance('HomePage');
 
   const bannerEvents = useMemo(() => events.slice(0, 3), [events]);
 
@@ -24,14 +29,20 @@ const HomePage: React.FC = () => {
         if (!supabaseUrl || !supabaseKey) {
           console.warn('Supabase not configured, using mock data');
           // Use mock data when Supabase is not configured
+          const today = new Date();
+          const tomorrow = new Date(today);
+          tomorrow.setDate(today.getDate() + 1);
+          const nextWeek = new Date(today);
+          nextWeek.setDate(today.getDate() + 7);
+          
           const mockEvents: Event[] = [
             {
               id: 1,
-              event_name: 'Summer Music Festival 2024',
-              description: 'Join us for an amazing summer music festival featuring top artists from around the world.',
+              event_name: 'Today\'s Music Festival',
+              description: 'Join us for an amazing music festival happening today!',
               venue: 'Central Park',
-              event_start_datetime: '2024-07-15T18:00:00Z',
-              event_end_datetime: '2024-07-16T23:00:00Z',
+              event_start_datetime: today.toISOString(),
+              event_end_datetime: new Date(today.getTime() + 5 * 60 * 60 * 1000).toISOString(), // 5 hours later
               poster_url: 'https://picsum.photos/800/600?random=1',
               organizer_id: 1,
               organizer_name: 'Music Events Co.',
@@ -57,11 +68,11 @@ const HomePage: React.FC = () => {
             },
             {
               id: 2,
-              event_name: 'Tech Conference 2024',
-              description: 'The biggest tech conference of the year with industry leaders and innovators.',
+              event_name: 'Tomorrow\'s Tech Conference',
+              description: 'The biggest tech conference happening tomorrow with industry leaders and innovators.',
               venue: 'Convention Center',
-              event_start_datetime: '2024-08-20T09:00:00Z',
-              event_end_datetime: '2024-08-22T17:00:00Z',
+              event_start_datetime: tomorrow.toISOString(),
+              event_end_datetime: new Date(tomorrow.getTime() + 8 * 60 * 60 * 1000).toISOString(), // 8 hours later
               poster_url: 'https://picsum.photos/800/600?random=2',
               organizer_id: 2,
               organizer_name: 'Tech Events Ltd.',
@@ -87,11 +98,11 @@ const HomePage: React.FC = () => {
             },
             {
               id: 3,
-              event_name: 'Food & Wine Festival',
-              description: 'Experience the finest cuisine and wines from local and international chefs.',
+              event_name: 'Next Week Food & Wine Festival',
+              description: 'Experience the finest cuisine and wines from local and international chefs next week.',
               venue: 'Waterfront Plaza',
-              event_start_datetime: '2024-09-10T12:00:00Z',
-              event_end_datetime: '2024-09-12T22:00:00Z',
+              event_start_datetime: nextWeek.toISOString(),
+              event_end_datetime: new Date(nextWeek.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days later
               poster_url: 'https://picsum.photos/800/600?random=3',
               organizer_id: 3,
               organizer_name: 'Culinary Events',
@@ -143,16 +154,29 @@ const HomePage: React.FC = () => {
           organizer_name: (event.organizers as any)?.organizer_name || 'Unknown Organizer'
         })) as Event[];
         setEvents(formattedData);
+        setFilteredEvents(formattedData);
       } catch (err: any) {
         console.error('Unexpected error fetching events:', err);
         setError('An unexpected error occurred while fetching events. Please try again later.');
         setEvents([]);
+        setFilteredEvents([]);
       } finally {
         setLoading(false);
       }
     };
     fetchEvents();
   }, []);
+
+  // Initialize filtered events when events change
+  useEffect(() => {
+    if (events.length > 0) {
+      setFilteredEvents(events);
+    }
+  }, [events]);
+
+  const handleFilteredEvents = (filtered: Event[]) => {
+    setFilteredEvents(filtered);
+  };
 
   useEffect(() => {
     if (bannerEvents.length === 0) return;
@@ -166,8 +190,26 @@ const HomePage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary"></div>
+      <div>
+        {/* Loading Banner */}
+        <div className="h-96 bg-border animate-pulse" />
+        
+        {/* Loading Content */}
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="h-8 bg-border rounded w-1/3 mx-auto mb-8 animate-pulse" />
+          
+          {/* Loading Search */}
+          <div className="mb-8">
+            <div className="h-12 bg-border rounded animate-pulse" />
+          </div>
+          
+          {/* Loading Events Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <EventCardSkeleton key={i} />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -237,20 +279,42 @@ const HomePage: React.FC = () => {
         </div>
       </section>
       
-      {/* Section 3: Headliners / Upcoming Events */}
+      {/* Section 3: Search and Events */}
       <section className="py-20 px-4 container mx-auto">
-        <h2 className="text-center text-3xl font-bold uppercase tracking-wider text-text-primary mb-4">HEADLINERS</h2>
+        <h2 className="text-center text-3xl font-bold uppercase tracking-wider text-text-primary mb-4">
+          DISCOVER EVENTS
+        </h2>
         <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary mx-auto mb-12"></div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {events.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
+        
+        {/* Search and Filter */}
+        <div className="mb-12">
+          <SearchFilter 
+            events={events} 
+            onFilteredEvents={handleFilteredEvents}
+            className="max-w-4xl mx-auto"
+          />
         </div>
-        <div className="text-center mt-12">
-            <button className="px-8 py-3 text-sm font-semibold text-white bg-gradient-to-r from-primary to-secondary rounded-md hover:opacity-90 transition-opacity">
-                FESTIVAL LINE-UP
-            </button>
-        </div>
+
+        {/* Events Grid */}
+        {filteredEvents.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredEvents.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className="mb-4">
+              <svg className="w-16 h-16 mx-auto text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-text-primary mb-2">No events found</h3>
+            <p className="text-text-secondary">
+              Try adjusting your search criteria or browse all events.
+            </p>
+          </div>
+        )}
       </section>
     </div>
   );

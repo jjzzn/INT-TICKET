@@ -40,7 +40,7 @@ const Header: React.FC = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <NavLink to="/" className="flex items-center gap-2" aria-label="Go to home">
-            <span className="text-2xl font-bold tracking-wider text-text-primary uppercase">Festival</span>
+            <span className="text-2xl font-bold tracking-wider text-text-primary uppercase">INT-TICKET</span>
           </NavLink>
 
           <nav className="hidden md:flex items-center space-x-8">
