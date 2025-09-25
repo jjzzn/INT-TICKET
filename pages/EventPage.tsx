@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { EventWithTickets, TicketType } from '../types';
+import { EventWithTickets, TicketType, Speaker } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 
@@ -56,6 +55,138 @@ const LinkIcon = () => (
     </svg>
 );
 
+const MicrophoneIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+    </svg>
+);
+
+const InfoIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+    </svg>
+);
+
+const GlobeIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z" clipRule="evenodd" />
+    </svg>
+);
+
+const DocumentIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+    </svg>
+);
+
+const LinkedInIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+    </svg>
+);
+
+const TwitterIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+    </svg>
+);
+
+// Social Media Icon Component
+const SocialMediaLinks: React.FC<{ event: any }> = ({ event }) => {
+    const socialLinks = [
+        { url: event.facebook_contact, name: 'Facebook', color: 'text-blue-600 hover:text-blue-800' },
+        { url: event.instagram_contact, name: 'Instagram', color: 'text-pink-600 hover:text-pink-800' },
+        { url: event.x_contact, name: 'X (Twitter)', color: 'text-gray-600 hover:text-gray-800' },
+        { url: event.tiktok_contact, name: 'TikTok', color: 'text-black hover:text-gray-800' },
+        { url: event.youtube_contact, name: 'YouTube', color: 'text-red-600 hover:text-red-800' },
+        { url: event.line_contact, name: 'Line', color: 'text-green-600 hover:text-green-800' }
+    ].filter(link => link.url);
+
+    if (socialLinks.length === 0) return null;
+
+    return (
+        <div className="bg-card p-6 rounded-xl border border-border">
+            <h3 className="text-lg font-bold text-text-primary mb-4">Follow Us</h3>
+            <div className="flex flex-wrap gap-3">
+                {socialLinks.map((link, index) => (
+                    <a
+                        key={index}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`px-4 py-2 text-sm font-medium rounded-lg border border-border hover:border-primary transition-all duration-200 ${link.color}`}
+                    >
+                        {link.name}
+                    </a>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+const SpeakerCard: React.FC<{ speaker: Speaker }> = ({ speaker }) => {
+    return (
+        <div className="bg-card p-6 rounded-xl border border-border hover:shadow-lg transition-all duration-200">
+            <div className="flex items-start gap-4">
+                <div className="flex-shrink-0">
+                    {speaker.image_url ? (
+                        <img 
+                            src={speaker.image_url} 
+                            alt={speaker.name}
+                            className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
+                        />
+                    ) : (
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                            <span className="text-white font-bold text-lg">
+                                {speaker.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                            </span>
+                        </div>
+                    )}
+                </div>
+                <div className="flex-1 min-w-0">
+                    <h4 className="text-lg font-bold text-text-primary mb-1">{speaker.name}</h4>
+                    {speaker.title && (
+                        <p className="text-sm font-medium text-primary mb-1">{speaker.title}</p>
+                    )}
+                    {speaker.company && (
+                        <p className="text-sm text-text-secondary mb-3">{speaker.company}</p>
+                    )}
+                    {speaker.bio && (
+                        <p className="text-sm text-text-secondary leading-relaxed mb-4">
+                            {speaker.bio}
+                        </p>
+                    )}
+                    {(speaker.linkedin_url || speaker.twitter_url) && (
+                        <div className="flex items-center gap-3">
+                            {speaker.linkedin_url && (
+                                <a 
+                                    href={speaker.linkedin_url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-800 transition-colors"
+                                    title="LinkedIn Profile"
+                                >
+                                    <LinkedInIcon />
+                                </a>
+                            )}
+                            {speaker.twitter_url && (
+                                <a 
+                                    href={speaker.twitter_url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-gray-600 hover:text-gray-800 transition-colors"
+                                    title="Twitter Profile"
+                                >
+                                    <TwitterIcon />
+                                </a>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const TicketTierCard: React.FC<{ tier: TicketType, onSelect: () => void }> = ({ tier, onSelect }) => {
     const sold = tier.sold_quantity || 0;
@@ -156,13 +287,16 @@ const EventPage: React.FC = () => {
           current_attendees: 450,
           event_type: 'Conference',
           currency: 'THB',
-          event_info: 'Please bring your laptop for hands-on workshops. Lunch and refreshments will be provided. Parking is available on-site.',
+          event_info: 'Please bring your laptop for hands-on workshops. Lunch and refreshments will be provided. Parking is available on-site. Registration starts at 8:30 AM.',
           agenda_url: 'https://techconf2024.com/agenda',
           google_map_link: 'https://maps.app.goo.gl/example',
           website_url: 'https://techconf2024.com',
           facebook_contact: 'https://facebook.com/techconf2024',
           instagram_contact: 'https://instagram.com/techconf2024',
           x_contact: 'https://x.com/techconf2024',
+          tiktok_contact: 'https://tiktok.com/@techconf2024',
+          youtube_contact: 'https://youtube.com/@techconf2024',
+          line_contact: '@techconf2024',
           organizer_name: 'Tech Events Thailand',
           ticket_types: [
             {
@@ -207,6 +341,60 @@ const EventPage: React.FC = () => {
               sale_start_date: '2024-01-01T00:00:00Z',
               sale_end_date: '2024-12-14T23:59:59Z'
             }
+          ],
+          speakers: [
+            {
+              id: 1,
+              event_id: parseInt(id, 10),
+              name: 'Dr. Sarah Chen',
+              title: 'Chief AI Officer',
+              company: 'TechVision AI',
+              bio: 'Dr. Sarah Chen is a leading expert in artificial intelligence and machine learning with over 15 years of experience. She has published numerous papers on neural networks and has been instrumental in developing AI solutions for Fortune 500 companies.',
+              image_url: 'https://picsum.photos/200/200?random=speaker1',
+              linkedin_url: 'https://linkedin.com/in/sarahchen',
+              twitter_url: 'https://twitter.com/sarahchen_ai',
+              order: 1,
+              created_at: '2024-01-01T00:00:00Z'
+            },
+            {
+              id: 2,
+              event_id: parseInt(id, 10),
+              name: 'Marcus Rodriguez',
+              title: 'Blockchain Architect',
+              company: 'CryptoInnovate',
+              bio: 'Marcus is a blockchain pioneer who has been working with distributed ledger technologies since 2009. He has architected blockchain solutions for major financial institutions and is a frequent speaker at international conferences.',
+              image_url: 'https://picsum.photos/200/200?random=speaker2',
+              linkedin_url: 'https://linkedin.com/in/marcusrodriguez',
+              twitter_url: 'https://twitter.com/marcus_crypto',
+              order: 2,
+              created_at: '2024-01-01T00:00:00Z'
+            },
+            {
+              id: 3,
+              event_id: parseInt(id, 10),
+              name: 'Emily Watson',
+              title: 'Senior Full-Stack Developer',
+              company: 'WebCraft Studios',
+              bio: 'Emily is a passionate full-stack developer with expertise in React, Node.js, and cloud technologies. She has built scalable web applications for startups and enterprises, and is an advocate for clean code and best practices.',
+              image_url: 'https://picsum.photos/200/200?random=speaker3',
+              linkedin_url: 'https://linkedin.com/in/emilywatson',
+              twitter_url: null,
+              order: 3,
+              created_at: '2024-01-01T00:00:00Z'
+            },
+            {
+              id: 4,
+              event_id: parseInt(id, 10),
+              name: 'David Kim',
+              title: 'DevOps Engineer',
+              company: 'CloudScale Solutions',
+              bio: 'David specializes in DevOps practices, container orchestration, and cloud infrastructure. He has helped numerous organizations transition to cloud-native architectures and implement CI/CD pipelines.',
+              image_url: null,
+              linkedin_url: 'https://linkedin.com/in/davidkim',
+              twitter_url: 'https://twitter.com/david_devops',
+              order: 4,
+              created_at: '2024-01-01T00:00:00Z'
+            }
           ]
         };
         
@@ -220,6 +408,7 @@ const EventPage: React.FC = () => {
         .select(`
             *,
             ticket_types(*),
+            speakers(*),
             organizers ( organizer_name )
         `)
         .eq('id', parseInt(id, 10))
@@ -235,6 +424,7 @@ const EventPage: React.FC = () => {
         setEvent({
             ...eventData,
             ticket_types: eventData.ticket_types || [],
+            speakers: eventData.speakers || [],
             organizer_name: eventData.organizers?.organizer_name || 'Unknown Organizer'
         });
       }
@@ -253,7 +443,17 @@ const EventPage: React.FC = () => {
   }
 
   if (loading) {
-    return <div className="text-center p-10 container mx-auto">Loading event details...</div>;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <svg className="animate-spin h-8 w-8 mx-auto mb-4 text-primary" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p className="text-text-secondary">Loading event details...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error || !event) {
@@ -293,9 +493,6 @@ const EventPage: React.FC = () => {
             <div className="flex items-center gap-2 mb-4">
               <span className="px-3 py-1 bg-primary text-white text-sm font-semibold rounded-full">
                 {event.event_type}
-              </span>
-              <span className="px-3 py-1 bg-white/20 text-white text-sm font-semibold rounded-full backdrop-blur-sm">
-                {event.current_attendees || 0} / {event.max_attendees} attending
               </span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{event.event_name}</h1>
@@ -389,53 +586,136 @@ const EventPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Additional Info & Links */}
-            {(event.event_info || event.website_url || event.agenda_url || event.google_map_link) && (
+            {/* Important Information */}
+            {event.event_info && (
               <div className="bg-card p-8 rounded-xl border border-border">
-                <h3 className="text-xl font-bold text-text-primary mb-6">Additional Information</h3>
+                <h3 className="text-2xl font-bold text-text-primary mb-6 flex items-center gap-2">
+                  <InfoIcon />
+                  Important Information
+                </h3>
+                <div className="prose prose-gray max-w-none">
+                  <p className="text-text-secondary leading-relaxed whitespace-pre-wrap">
+                    {event.event_info}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Event Agenda Section */}
+            {event.agenda_url && (
+              <div className="bg-card p-8 rounded-xl border border-border">
+                <h3 className="text-2xl font-bold text-text-primary mb-6 flex items-center gap-2">
+                  <DocumentIcon />
+                  Event Agenda
+                </h3>
                 <div className="space-y-4">
-                  {event.event_info && (
-                    <div>
-                      <h4 className="font-semibold text-text-primary mb-2">Important Notes</h4>
-                      <p className="text-text-secondary leading-relaxed">{event.event_info}</p>
-                    </div>
-                  )}
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                    {event.website_url && (
-                      <a 
-                        href={event.website_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 p-3 bg-surface rounded-lg hover:bg-border transition-colors"
-                      >
-                        <LinkIcon />
-                        <span className="text-sm font-medium text-text-primary">Event Website</span>
-                      </a>
-                    )}
-                    {event.agenda_url && (
+                  <div className="overflow-hidden rounded-lg border border-border">
+                    <img 
+                      src={event.agenda_url} 
+                      alt="Event Agenda"
+                      className="w-full h-auto object-contain max-h-[800px]"
+                      onError={(e) => {
+                        // Fallback to link if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const fallbackDiv = target.nextElementSibling as HTMLDivElement;
+                        if (fallbackDiv) {
+                          fallbackDiv.style.display = 'block';
+                        }
+                      }}
+                    />
+                    <div 
+                      className="hidden p-6 text-center bg-surface"
+                      style={{ display: 'none' }}
+                    >
+                      <p className="text-text-secondary mb-4">Unable to display agenda image</p>
                       <a 
                         href={event.agenda_url} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 p-3 bg-surface rounded-lg hover:bg-border transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
                       >
-                        <CalendarIcon />
-                        <span className="text-sm font-medium text-text-primary">View Agenda</span>
+                        <DocumentIcon />
+                        View Agenda
                       </a>
-                    )}
-                    {event.google_map_link && (
-                      <a 
-                        href={event.google_map_link} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 p-3 bg-surface rounded-lg hover:bg-border transition-colors"
-                      >
-                        <LocationIcon />
-                        <span className="text-sm font-medium text-text-primary">Get Directions</span>
-                      </a>
-                    )}
+                    </div>
                   </div>
+                  <div className="flex justify-center">
+                    <a 
+                      href={event.agenda_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors"
+                    >
+                      <LinkIcon />
+                      Open full-size agenda
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Event Links Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {event.website_url && (
+                <div className="bg-card p-6 rounded-xl border border-border">
+                  <h3 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
+                    <GlobeIcon />
+                    Official Website
+                  </h3>
+                  <a 
+                    href={event.website_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium"
+                  >
+                    <LinkIcon />
+                    Visit Website
+                  </a>
+                  <p className="text-sm text-text-secondary mt-2">
+                    Get more details and updates about the event
+                  </p>
+                </div>
+              )}
+
+              {event.google_map_link && (
+                <div className="bg-card p-6 rounded-xl border border-border">
+                  <h3 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
+                    <LocationIcon />
+                    Venue Location
+                  </h3>
+                  <a 
+                    href={event.google_map_link} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium"
+                  >
+                    <LocationIcon />
+                    Get Directions
+                  </a>
+                  <p className="text-sm text-text-secondary mt-2">
+                    Navigate to {event.venue}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Social Media Links */}
+            <SocialMediaLinks event={event} />
+
+            {/* Speakers Section */}
+            {event.speakers && event.speakers.length > 0 && (
+              <div className="bg-card p-8 rounded-xl border border-border">
+                <h3 className="text-2xl font-bold text-text-primary mb-6 flex items-center gap-2">
+                  <MicrophoneIcon />
+                  Featured Speakers
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {event.speakers
+                    .sort((a, b) => (a.order || 0) - (b.order || 0))
+                    .map(speaker => (
+                      <SpeakerCard key={speaker.id} speaker={speaker} />
+                    ))}
                 </div>
               </div>
             )}

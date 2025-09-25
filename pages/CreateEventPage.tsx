@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { Role, Database } from '../types';
+import { Role, Database, EventStatus } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
 type SpeakerFormData = Omit<Database['public']['Tables']['speakers']['Insert'], 'event_id'>;
@@ -113,9 +113,9 @@ const CreateEventPage: React.FC = () => {
         poster_url: `https://picsum.photos/seed/${Date.now()}/1200/600`,
         contact_email: user?.role === Role.ORGANIZER ? user.data.email : '',
         contact_phone: user?.role === Role.ORGANIZER ? user.data.phone : '',
-        max_attendees: '1000',
-        event_type: 'Conference',
-        currency: 'USD',
+        max_attendees: '',
+        event_type: '',
+        currency: '',
         google_map_link: '',
         agenda_url: '',
         website_url: '',
@@ -125,6 +125,7 @@ const CreateEventPage: React.FC = () => {
         tiktok_contact: '',
         youtube_contact: '',
         line_contact: '',
+        status: EventStatus.DRAFT, // Default to draft
     });
     
     const [tiers, setTiers] = useState([{ name: 'General Admission', price: '50', quantity: '100' }]);
@@ -280,13 +281,14 @@ const CreateEventPage: React.FC = () => {
         setStep(prev => Math.max(prev - 1, 1));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        
+    const handleSubmit = async (eventStatus: EventStatus) => {
         // Prevent multiple submissions
         if (isSubmitting) {
             return;
         }
+        
+        // Set the status based on which button was clicked
+        const updatedFormData = { ...formData, status: eventStatus };
         
         // Validate all steps before submission
         const step1Valid = validateStep1();
@@ -328,7 +330,8 @@ const CreateEventPage: React.FC = () => {
                 setSubmitStatus('success');
                 
                 // Show success message
-                alert(`Event "${formData.event_name}" created successfully! (Demo Mode - Supabase not configured)\n\nTo enable real database functionality, please configure your Supabase credentials in .env.local file.`);
+                const statusText = eventStatus === EventStatus.PUBLIC ? 'published publicly' : 'saved as draft';
+                alert(`Event "${updatedFormData.event_name}" ${statusText} successfully! (Demo Mode - Supabase not configured)\n\nTo enable real database functionality, please configure your Supabase credentials in .env.local file.`);
                 
                 // Navigate to dashboard
                 setTimeout(() => {
@@ -339,32 +342,33 @@ const CreateEventPage: React.FC = () => {
 
             // Create properly typed event payload according to DB schema
             const eventPayload: Database['public']['Tables']['events']['Insert'] = {
-                event_name: formData.event_name,
-                event_start_datetime: formData.event_start_datetime,
-                event_end_datetime: formData.event_end_datetime,
-                venue: formData.venue,
-                description: formData.description,
-                contact_email: formData.contact_email,
-                contact_phone: formData.contact_phone,
-                max_attendees: parseInt(formData.max_attendees, 10),
-                event_type: formData.event_type,
-                currency: formData.currency,
+                event_name: updatedFormData.event_name,
+                event_start_datetime: updatedFormData.event_start_datetime,
+                event_end_datetime: updatedFormData.event_end_datetime,
+                venue: updatedFormData.venue,
+                description: updatedFormData.description,
+                contact_email: updatedFormData.contact_email,
+                contact_phone: updatedFormData.contact_phone,
+                max_attendees: parseInt(updatedFormData.max_attendees, 10),
+                event_type: updatedFormData.event_type,
+                currency: updatedFormData.currency,
                 organizer_id: user.data.id,
                 // Optional fields - only include if not empty
-                ...(formData.event_info && { event_info: formData.event_info }),
-                ...(formData.poster_url && { poster_url: formData.poster_url }),
-                ...(formData.google_map_link && { google_map_link: formData.google_map_link }),
-                ...(formData.agenda_url && { agenda_url: formData.agenda_url }),
-                ...(formData.website_url && { website_url: formData.website_url }),
-                ...(formData.facebook_contact && { facebook_contact: formData.facebook_contact }),
-                ...(formData.instagram_contact && { instagram_contact: formData.instagram_contact }),
-                ...(formData.x_contact && { x_contact: formData.x_contact }),
-                ...(formData.tiktok_contact && { tiktok_contact: formData.tiktok_contact }),
-                ...(formData.youtube_contact && { youtube_contact: formData.youtube_contact }),
-                ...(formData.line_contact && { line_contact: formData.line_contact }),
+                ...(updatedFormData.event_info && { event_info: updatedFormData.event_info }),
+                ...(updatedFormData.poster_url && { poster_url: updatedFormData.poster_url }),
+                ...(updatedFormData.google_map_link && { google_map_link: updatedFormData.google_map_link }),
+                ...(updatedFormData.agenda_url && { agenda_url: updatedFormData.agenda_url }),
+                ...(updatedFormData.website_url && { website_url: updatedFormData.website_url }),
+                ...(updatedFormData.facebook_contact && { facebook_contact: updatedFormData.facebook_contact }),
+                ...(updatedFormData.instagram_contact && { instagram_contact: updatedFormData.instagram_contact }),
+                ...(updatedFormData.x_contact && { x_contact: updatedFormData.x_contact }),
+                ...(updatedFormData.tiktok_contact && { tiktok_contact: updatedFormData.tiktok_contact }),
+                ...(updatedFormData.youtube_contact && { youtube_contact: updatedFormData.youtube_contact }),
+                ...(updatedFormData.line_contact && { line_contact: updatedFormData.line_contact }),
                 // Set default values for required fields that might be missing
                 is_active: true,
                 current_attendees: 0
+                // Note: status field will be added when database is updated
             };
 
             const { data: eventData, error: eventError } = await supabase
@@ -383,7 +387,7 @@ const CreateEventPage: React.FC = () => {
                 name: tier.name,
                 price: parseFloat(tier.price) || 0,
                 quantity: parseInt(tier.quantity, 10) || 0,
-                currency: formData.currency,
+                currency: updatedFormData.currency,
             }));
 
             const speakersToInsert = speakers.filter(s => s.name.trim()).map(speaker => ({
@@ -417,7 +421,8 @@ const CreateEventPage: React.FC = () => {
             setSubmitStatus('success');
             
             // Show success message before navigation
-            alert(`Event "${formData.event_name}" created successfully! Redirecting to dashboard...`);
+            const statusText = eventStatus === EventStatus.PUBLIC ? 'published publicly' : 'saved as draft';
+            alert(`Event "${updatedFormData.event_name}" ${statusText} successfully! Redirecting to dashboard...`);
             
             // Small delay to show success state
             setTimeout(() => {
@@ -454,7 +459,7 @@ const CreateEventPage: React.FC = () => {
     return (
         <div className="max-w-4xl mx-auto bg-card p-8 rounded-lg border border-border">
             <StepIndicator currentStep={step} />
-            <form onSubmit={handleSubmit} noValidate>
+            <div>
                 
                 {step === 1 && (
                     <div className="space-y-6 animate-fade-in">
@@ -573,6 +578,16 @@ const CreateEventPage: React.FC = () => {
                                 </ul>
                             </>}
                         </div>
+
+                        {/* Publication Status Info */}
+                        <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                            <h3 className="font-semibold text-blue-900 mb-2">Choose Publication Status</h3>
+                            <div className="space-y-2 text-sm text-blue-800">
+                                <p><strong>Save as Draft:</strong> Your event will be saved but not visible to the public. You can edit and publish it later.</p>
+                                <p><strong>Publish Event:</strong> Your event will be immediately visible to the public and attendees can start registering.</p>
+                            </div>
+                        </div>
+
                         <p className="text-xs text-text-secondary">By creating this event, you agree to our terms and conditions. Please review all details carefully before submitting.</p>
                     </div>
                 )}
@@ -589,31 +604,53 @@ const CreateEventPage: React.FC = () => {
                             Next
                         </button>
                     ) : (
-                        <div className="flex gap-2">
+                        <div className="flex gap-3">
                             {/* Debug reset button - can be removed in production */}
                             {(isSubmitting || submitStatus !== 'idle') && (
                                 <button type="button" onClick={resetSubmissionState} className="px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 transition-colors">
                                     Reset
                                 </button>
                             )}
-                            <button type="submit" disabled={isSubmitting} className="px-8 py-3 font-semibold text-white bg-primary rounded-md hover:bg-opacity-90 transition-colors disabled:bg-primary/50 disabled:cursor-not-allowed">
-                                {isSubmitting ? (
+                            
+                            {/* Save as Draft Button */}
+                            <button 
+                                type="button" 
+                                onClick={() => handleSubmit(EventStatus.DRAFT)}
+                                disabled={isSubmitting} 
+                                className="px-6 py-3 font-semibold text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors disabled:bg-gray-50 disabled:cursor-not-allowed"
+                            >
+                                {isSubmitting && formData.status === EventStatus.DRAFT ? (
                                     <span className="flex items-center gap-2">
                                         <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                             <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
-                                        {submitStatus === 'creating_event' && 'Creating Event...'}
-                                        {submitStatus === 'creating_tickets' && 'Adding Tickets...'}
-                                        {submitStatus === 'creating_speakers' && 'Adding Speakers...'}
-                                        {submitStatus === 'success' && 'Success!'}
+                                        Saving...
                                     </span>
-                                ) : 'Confirm & Create Event'}
+                                ) : 'Save as Draft'}
+                            </button>
+
+                            {/* Publish Event Button */}
+                            <button 
+                                type="button" 
+                                onClick={() => handleSubmit(EventStatus.PUBLIC)}
+                                disabled={isSubmitting} 
+                                className="px-6 py-3 font-semibold text-white bg-primary rounded-md hover:bg-opacity-90 transition-colors disabled:bg-primary/50 disabled:cursor-not-allowed"
+                            >
+                                {isSubmitting && formData.status === EventStatus.PUBLIC ? (
+                                    <span className="flex items-center gap-2">
+                                        <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Publishing...
+                                    </span>
+                                ) : 'Publish Event'}
                             </button>
                         </div>
                     )}
                 </div>
-            </form>
+            </div>
         </div>
     );
 };

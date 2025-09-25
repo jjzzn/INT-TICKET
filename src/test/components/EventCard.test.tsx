@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import EventCard from '../../components/EventCard';
-import { Event } from '../../types';
+import EventCard from '../components/EventCard';
+import { Event, EventStatus } from '../../../types';
 
 const mockEvent: Event = {
   id: 1,
@@ -18,8 +18,8 @@ const mockEvent: Event = {
   contact_email: 'test@example.com',
   contact_phone: '+1234567890',
   max_attendees: 100,
-  event_type: 'Conference',
-  currency: 'USD',
+  event_type: '',
+  currency: '',
   current_attendees: 50,
   event_info: 'Test info',
   agenda_url: '',
@@ -31,7 +31,8 @@ const mockEvent: Event = {
   tiktok_contact: '',
   youtube_contact: '',
   line_contact: '',
-  organizer_name: 'Test Organizer'
+  organizer_name: 'Test Organizer',
+  status: EventStatus.PUBLIC
 };
 
 const renderWithRouter = (component: React.ReactElement) => {

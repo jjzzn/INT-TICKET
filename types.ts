@@ -5,6 +5,11 @@ export enum Role {
   SUPER_ADMIN = 'Super Admin',
 }
 
+export enum EventStatus {
+  DRAFT = 'draft',
+  PUBLIC = 'public',
+}
+
 // fix: Define User type for mock data
 export type User = {
   id: string;
@@ -26,6 +31,7 @@ export type Speaker = Database['public']['Tables']['speakers']['Row'];
 // Enriched types for application use
 export type EventWithTickets = Event & {
   ticket_types: TicketType[];
+  speakers?: Speaker[];
 };
 
 export type PurchasedTicket = Ticket & {
@@ -127,6 +133,7 @@ export type Database = {
           max_attendees: number
           organizer_id: number
           poster_url: string
+          status: string | null
           tiktok_contact: string
           venue: string
           website_url: string
@@ -155,6 +162,7 @@ export type Database = {
           max_attendees: number
           organizer_id: number
           poster_url?: string
+          status?: string | null
           tiktok_contact?: string
           venue: string
           website_url?: string
@@ -183,6 +191,7 @@ export type Database = {
           max_attendees?: number
           organizer_id?: number
           poster_url?: string
+          status?: string | null
           tiktok_contact?: string
           venue?: string
           website_url?: string

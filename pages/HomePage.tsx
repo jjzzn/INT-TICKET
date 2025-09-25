@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import EventCard from '../components/EventCard';
 import SearchFilter from '../components/SearchFilter';
 import Loading, { EventCardSkeleton } from '../components/Loading';
-import { Event } from '../types';
+import { Event, EventStatus } from '../types';
 import { supabase } from '../lib/supabaseClient';
 // import { usePerformance } from '../hooks/usePerformance';
 
@@ -64,7 +64,8 @@ const HomePage: React.FC = () => {
               tiktok_contact: '',
               website_url: '',
               x_contact: '',
-              youtube_contact: ''
+              youtube_contact: '',
+              status: EventStatus.PUBLIC
             },
             {
               id: 2,
@@ -94,7 +95,8 @@ const HomePage: React.FC = () => {
               tiktok_contact: '',
               website_url: '',
               x_contact: '',
-              youtube_contact: ''
+              youtube_contact: '',
+              status: EventStatus.PUBLIC
             },
             {
               id: 3,
@@ -124,7 +126,8 @@ const HomePage: React.FC = () => {
               tiktok_contact: '',
               website_url: '',
               x_contact: '',
-              youtube_contact: ''
+              youtube_contact: '',
+              status: EventStatus.PUBLIC
             }
           ];
           setEvents(mockEvents);
@@ -151,10 +154,14 @@ const HomePage: React.FC = () => {
         const safeData = Array.isArray(data) ? data : [];
         const formattedData = safeData.map((event: any) => ({
           ...event,
-          organizer_name: (event.organizers as any)?.organizer_name || 'Unknown Organizer'
+          organizer_name: (event.organizers as any)?.organizer_name || 'Unknown Organizer',
+          status: event.status || EventStatus.DRAFT // Default to draft if no status
         })) as Event[];
-        setEvents(formattedData);
-        setFilteredEvents(formattedData);
+        
+        // Filter to only show public events
+        const publicEvents = formattedData.filter(event => event.status === EventStatus.PUBLIC);
+        setEvents(publicEvents);
+        setFilteredEvents(publicEvents);
       } catch (err: any) {
         console.error('Unexpected error fetching events:', err);
         setError('An unexpected error occurred while fetching events. Please try again later.');
