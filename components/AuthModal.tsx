@@ -163,9 +163,21 @@ const RegisterTab = () => {
                 <label className="text-sm font-medium text-text-secondary">Phone Number <span className="text-red-500">*</span></label>
                 <div className="flex mt-1">
                     <select name="country_code" onChange={handleChange} defaultValue="+66" required className="bg-surface border border-r-0 border-border rounded-l-md px-3 py-2 text-text-primary focus:ring-primary focus:border-primary transition">
-                        <option value="+66">🇹🇭</option>
-                        <option value="+1">🇺🇸</option>
-                        <option value="+44">🇬🇧</option>
+                        <option value="+66">🇹🇭 TH (+66)</option>
+                        <option value="+1">🇺🇸 US (+1)</option>
+                        <option value="+44">🇬🇧 UK (+44)</option>
+                        <option value="+65">🇸🇬 SG (+65)</option>
+                        <option value="+60">🇲🇾 MY (+60)</option>
+                        <option value="+62">🇮🇩 ID (+62)</option>
+                        <option value="+63">🇵🇭 PH (+63)</option>
+                        <option value="+84">🇻🇳 VN (+84)</option>
+                        <option value="+86">🇨🇳 CN (+86)</option>
+                        <option value="+81">🇯🇵 JP (+81)</option>
+                        <option value="+82">🇰🇷 KR (+82)</option>
+                        <option value="+91">🇮🇳 IN (+91)</option>
+                        <option value="+61">🇦🇺 AU (+61)</option>
+                        <option value="+49">🇩🇪 DE (+49)</option>
+                        <option value="+33">🇫🇷 FR (+33)</option>
                     </select>
                     <input name="phone" type="tel" onChange={handleChange} required placeholder="Enter phone number" className="w-full bg-surface border border-border rounded-r-md px-3 py-2 text-text-primary focus:ring-primary focus:border-primary transition" />
                 </div>
@@ -202,21 +214,31 @@ const RegisterTab = () => {
                     <label className="text-sm font-medium text-text-secondary">Organizer Name <span className="text-red-500">*</span></label>
                     <input name="organizer_name" onChange={handleChange} required placeholder="Enter organizer name" className="mt-1 w-full bg-surface border border-border rounded-md px-3 py-2 text-text-primary" />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     <div>
-                        <label className="text-sm font-medium text-text-secondary">Email <span className="text-red-500">*</span></label>
-                        <input name="email" type="email" onChange={handleChange} required placeholder="Enter email address" className="mt-1 w-full bg-surface border border-border rounded-md px-3 py-2 text-text-primary" />
-                    </div>
-                     <div>
-                        <label className="text-sm font-medium text-text-secondary">Phone Number <span className="text-red-500">*</span></label>
-                         <div className="flex mt-1">
-                             <select name="country_code" onChange={handleChange} defaultValue="+66" required className="bg-surface border border-r-0 border-border rounded-l-md px-3 py-2 text-text-primary">
-                                <option value="+66">🇹🇭</option>
-                                <option value="+1">🇺🇸</option>
-                                <option value="+44">🇬🇧</option>
-                            </select>
-                            <input name="phone" type="tel" onChange={handleChange} required placeholder="Enter phone number" className="w-full bg-surface border border-border rounded-r-md px-3 py-2 text-text-primary" />
-                        </div>
+                <div>
+                    <label className="text-sm font-medium text-text-secondary">Email <span className="text-red-500">*</span></label>
+                    <input name="email" type="email" onChange={handleChange} required placeholder="Enter email address" className="mt-1 w-full bg-surface border border-border rounded-md px-3 py-2 text-text-primary" />
+                </div>
+                <div>
+                    <label className="text-sm font-medium text-text-secondary">Phone Number <span className="text-red-500">*</span></label>
+                    <div className="flex mt-1">
+                        <select name="country_code" onChange={handleChange} defaultValue="+66" required className="bg-surface border border-r-0 border-border rounded-l-md px-3 py-2 text-text-primary">
+                            <option value="+66">🇹🇭 TH (+66)</option>
+                            <option value="+1">🇺🇸 US (+1)</option>
+                            <option value="+44">🇬🇧 UK (+44)</option>
+                            <option value="+65">🇸🇬 SG (+65)</option>
+                            <option value="+60">🇲🇾 MY (+60)</option>
+                            <option value="+62">🇮🇩 ID (+62)</option>
+                            <option value="+63">🇵🇭 PH (+63)</option>
+                            <option value="+84">🇻🇳 VN (+84)</option>
+                            <option value="+86">🇨🇳 CN (+86)</option>
+                            <option value="+81">🇯🇵 JP (+81)</option>
+                            <option value="+82">🇰🇷 KR (+82)</option>
+                            <option value="+91">🇮🇳 IN (+91)</option>
+                            <option value="+61">🇦🇺 AU (+61)</option>
+                            <option value="+49">🇩🇪 DE (+49)</option>
+                            <option value="+33">🇫🇷 FR (+33)</option>
+                        </select>
+                        <input name="phone" type="tel" onChange={handleChange} required placeholder="Enter phone number" className="w-full bg-surface border border-border rounded-r-md px-3 py-2 text-text-primary" />
                     </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
