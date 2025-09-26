@@ -402,66 +402,106 @@ const EditEventPage: React.FC = () => {
         if (!formData.contact_email.trim()) newErrors.contact_email = "Contact email is required.";
         if (!formData.contact_phone.trim()) newErrors.contact_phone = "Contact phone is required.";
         
-        // URL validations
-        if (!isValidUrl(formData.poster_url)) newErrors.poster_url = "Please enter a valid URL for the poster.";
-        if (!isValidUrl(formData.website_url)) newErrors.website_url = "Please enter a valid website URL.";
-        if (!isValidUrl(formData.agenda_url)) newErrors.agenda_url = "Please enter a valid agenda URL.";
-        if (!isValidUrl(formData.google_map_link)) newErrors.google_map_link = "Please enter a valid Google Maps URL.";
+        // URL validations - only validate if not empty
+        if (formData.poster_url.trim() && !isValidUrl(formData.poster_url)) newErrors.poster_url = "Please enter a valid URL for the poster.";
+        if (formData.website_url.trim() && !isValidUrl(formData.website_url)) newErrors.website_url = "Please enter a valid website URL.";
+        if (formData.agenda_url.trim() && !isValidUrl(formData.agenda_url)) newErrors.agenda_url = "Please enter a valid agenda URL.";
+        if (formData.google_map_link.trim() && !isValidUrl(formData.google_map_link)) newErrors.google_map_link = "Please enter a valid Google Maps URL.";
         
-        // Social media URL validations
-        if (!isValidUrl(formData.facebook_contact)) newErrors.facebook_contact = "Please enter a valid Facebook URL.";
-        if (!isValidUrl(formData.instagram_contact)) newErrors.instagram_contact = "Please enter a valid Instagram URL.";
-        if (!isValidUrl(formData.x_contact)) newErrors.x_contact = "Please enter a valid X/Twitter URL.";
-        if (!isValidUrl(formData.tiktok_contact)) newErrors.tiktok_contact = "Please enter a valid TikTok URL.";
-        if (!isValidUrl(formData.youtube_contact)) newErrors.youtube_contact = "Please enter a valid YouTube URL.";
+        // Social media URL validations - only validate if not empty
+        if (formData.facebook_contact.trim() && !isValidUrl(formData.facebook_contact)) newErrors.facebook_contact = "Please enter a valid Facebook URL.";
+        if (formData.instagram_contact.trim() && !isValidUrl(formData.instagram_contact)) newErrors.instagram_contact = "Please enter a valid Instagram URL.";
+        if (formData.x_contact.trim() && !isValidUrl(formData.x_contact)) newErrors.x_contact = "Please enter a valid X/Twitter URL.";
+        if (formData.tiktok_contact.trim() && !isValidUrl(formData.tiktok_contact)) newErrors.tiktok_contact = "Please enter a valid TikTok URL.";
+        if (formData.youtube_contact.trim() && !isValidUrl(formData.youtube_contact)) newErrors.youtube_contact = "Please enter a valid YouTube URL.";
 
         // Tickets validation
         const newTierErrors: any[] = [];
         let hasValidTier = false;
+        let hasTicketErrors = false;
+        
         tiers.forEach((tier, index) => {
             const tierErrors: Record<string, string> = {};
             if (tier.name.trim()) { // Only validate if tier has a name
                 hasValidTier = true;
                 if (!/^\d+(\.\d{1,2})?$/.test(tier.price) || parseFloat(tier.price) < 0) {
                     tierErrors.price = "Price must be a valid number.";
+                    hasTicketErrors = true;
                 }
                 if (!/^\d+$/.test(tier.quantity) || parseInt(tier.quantity, 10) <= 0) {
                     tierErrors.quantity = "Quantity must be a positive whole number.";
+                    hasTicketErrors = true;
                 }
             }
             newTierErrors[index] = tierErrors;
         });
+        
         if (!hasValidTier) {
             newErrors.tickets = "At least one ticket type is required.";
-        } else {
+        } else if (hasTicketErrors) {
             newErrors.tiers = newTierErrors;
         }
 
-        // Speakers validation
+        // Speakers validation - more lenient
         const newSpeakerErrors: any[] = [];
+        let hasSpeakerErrors = false;
+        
         speakers.forEach((speaker, index) => {
-            if (Object.values(speaker).some(val => val && String(val).trim() !== '' && String(val).trim() !== 'undefined')) {
+            if (speaker.name?.trim()) { // Only validate if speaker has a name
                 const speakerErrors: Record<string, string> = {};
-                if (!speaker.name?.trim()) {
-                    speakerErrors.name = "Speaker name is required.";
+                if (speaker.image_url?.trim() && !isValidUrl(speaker.image_url)) {
+                    speakerErrors.image_url = "Please enter a valid image URL.";
+                    hasSpeakerErrors = true;
                 }
-                if (!isValidUrl(speaker.image_url || '')) speakerErrors.image_url = "Please enter a valid image URL.";
-                if (!isValidUrl(speaker.linkedin_url || '')) speakerErrors.linkedin_url = "Please enter a valid LinkedIn URL.";
-                if (!isValidUrl(speaker.twitter_url || '')) speakerErrors.twitter_url = "Please enter a valid X/Twitter URL.";
+                if (speaker.linkedin_url?.trim() && !isValidUrl(speaker.linkedin_url)) {
+                    speakerErrors.linkedin_url = "Please enter a valid LinkedIn URL.";
+                    hasSpeakerErrors = true;
+                }
+                if (speaker.twitter_url?.trim() && !isValidUrl(speaker.twitter_url)) {
+                    speakerErrors.twitter_url = "Please enter a valid X/Twitter URL.";
+                    hasSpeakerErrors = true;
+                }
                 newSpeakerErrors[index] = speakerErrors;
             }
         });
-        if (newSpeakerErrors.some(err => Object.keys(err).length > 0)) {
+        
+        if (hasSpeakerErrors) {
             newErrors.speakers = newSpeakerErrors;
         }
         
+        // Debug logging
+        console.log('Validation errors found:', newErrors);
+        console.log('Error count:', Object.keys(newErrors).length);
+        
         setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        
+        // Clean check for validation
+        const hasErrors = Object.keys(newErrors).length > 0;
+        console.log('Form is valid:', !hasErrors);
+        
+        return !hasErrors;
     };
 
     const handleSubmit = async (eventStatus: EventStatus) => {
-        if (isSubmitting || !validateForm()) return;
+        // Log to debug
+        console.log('handleSubmit called with status:', eventStatus);
+        console.log('Current isSubmitting state:', isSubmitting);
+        
+        // Prevent submission if already submitting or validation fails
+        if (isSubmitting) {
+            console.log('Already submitting, returning early');
+            return;
+        }
+        
+        // Validate form first
+        console.log('Validating form...');
+        const isValid = validateForm();
+        if (!isValid) {
+            console.log('Form validation failed:', errors);
+            return;
+        }
 
+        console.log('Form is valid, starting submission process');
         setIsSubmitting(true);
         setSubmitStatus('updating');
 
@@ -471,6 +511,7 @@ const EditEventPage: React.FC = () => {
             
             if (!supabaseUrl || !supabaseKey) {
                 // Mock update for demo
+                console.log('Running in demo mode');
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 setSubmitStatus('success');
                 const statusText = eventStatus === EventStatus.PUBLIC ? 'published publicly' : 'saved as draft';
@@ -582,11 +623,9 @@ const EditEventPage: React.FC = () => {
         } catch (error: any) {
             console.error('Failed to update event:', error);
             alert('Failed to update event: ' + error.message);
+            setSubmitStatus('idle');
         } finally {
             setIsSubmitting(false);
-            if (submitStatus !== 'success') {
-                setSubmitStatus('idle');
-            }
         }
     };
 
@@ -622,6 +661,11 @@ const EditEventPage: React.FC = () => {
                     }`}>
                         {formData.status === EventStatus.PUBLIC ? 'Public' : 'Draft'}
                     </span>
+                </div>
+                
+                {/* Debug info - remove in production */}
+                <div className="mt-2 text-xs text-gray-500">
+                    Debug: isSubmitting={isSubmitting.toString()}, submitStatus={submitStatus}
                 </div>
             </div>
 
@@ -1041,11 +1085,15 @@ const EditEventPage: React.FC = () => {
                         {/* Save as Draft Button */}
                         <button 
                             type="button" 
-                            onClick={() => handleSubmit(EventStatus.DRAFT)}
+                            onClick={(e) => {
+                                console.log('Save as Draft clicked');
+                                e.preventDefault();
+                                handleSubmit(EventStatus.DRAFT);
+                            }}
                             disabled={isSubmitting} 
                             className="px-6 py-3 font-semibold text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors disabled:bg-gray-50 disabled:cursor-not-allowed"
                         >
-                            {isSubmitting ? (
+                            {isSubmitting && submitStatus === 'updating' ? (
                                 <span className="flex items-center gap-2">
                                     <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -1059,11 +1107,15 @@ const EditEventPage: React.FC = () => {
                         {/* Publish Event Button */}
                         <button 
                             type="button" 
-                            onClick={() => handleSubmit(EventStatus.PUBLIC)}
+                            onClick={(e) => {
+                                console.log('Publish Event clicked');
+                                e.preventDefault();
+                                handleSubmit(EventStatus.PUBLIC);
+                            }}
                             disabled={isSubmitting} 
                             className="px-6 py-3 font-semibold text-white bg-primary rounded-md hover:bg-opacity-90 transition-colors disabled:bg-primary/50 disabled:cursor-not-allowed"
                         >
-                            {isSubmitting ? (
+                            {isSubmitting && submitStatus === 'updating' ? (
                                 <span className="flex items-center gap-2">
                                     <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
