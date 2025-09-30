@@ -1,5 +1,5 @@
 import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
-import { AuthUser, Role, Customer, Organizer, SuperAdmin } from '../types';
+import { AuthUser, Role, Customer, Organizer, SuperAdmin, UserProfile } from '../types';
 import { supabase } from '../lib/supabaseClient';
 import { AuthError, Session, User as SupabaseUser } from '@supabase/supabase-js';
 
@@ -10,13 +10,14 @@ interface AuthContextType {
   login: (email: string, password?: string) => Promise<{ error: AuthError | null }>;
   logout: () => Promise<void>;
   register: (role: Role, data: any) => Promise<{ error: AuthError | null; needsConfirmation?: boolean }>;
+  switchRole: (newRole: Role) => Promise<void>;
+  addRole: (role: Role, data: any) => Promise<{ error: Error | null }>;
   isAuthModalOpen: boolean;
   openAuthModal: (defaultTab?: 'login' | 'register', defaultRole?: Role) => void;
   closeAuthModal: () => void;
   authModalTab: 'login' | 'register';
   setAuthModalTab: (tab: 'login' | 'register') => void;
   authModalRole: Role;
-  // FIX: Add setAuthModalRole to the context type
   setAuthModalRole: (role: Role) => void;
 }
 
@@ -37,25 +38,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (!supabaseUrl || !supabaseKey) {
         console.warn('Supabase not configured, using mock authentication');
-        // Set a mock organizer user for demo purposes
+        // Set a mock user with both roles for demo purposes
+        const mockCustomer: Customer = {
+          id: 1,
+          first_name: 'Demo',
+          last_name: 'User',
+          email: 'demo@user.com',
+          phone: '+1234567890',
+          prefix: 'Mr.',
+          gender: 'Male',
+          birthday: '1990-01-01',
+          id_number: '1234567890123',
+          country_code: 'TH',
+          created_at: new Date().toISOString(),
+          supabase_user_id: 'mock-user-id'
+        };
+        const mockOrganizer: Organizer = {
+          id: 1,
+          organizer_name: 'Demo Organizer',
+          email: 'demo@user.com',
+          phone: '+1234567890',
+          business_type: 'Event Management',
+          company_name: 'Demo Events Co.',
+          tax_id: '123456789',
+          billing_address: '123 Demo Street',
+          contact_person: 'Demo Person',
+          invoice_email: 'invoice@demo.com',
+          created_at: new Date().toISOString(),
+          supabase_user_id: 'mock-user-id',
+          maps_link: null,
+          additional_notes: null
+        };
+        
+        const savedRole = localStorage.getItem('preferred_role') as Role || Role.CLIENT;
         setUser({
-          role: Role.ORGANIZER,
-          data: {
-            id: 1,
-            organizer_name: 'Demo Organizer',
-            email: 'demo@organizer.com',
-            phone: '+1234567890',
-            business_type: 'Event Management',
-            company_name: 'Demo Events Co.',
-            tax_id: '123456789',
-            billing_address: '123 Demo Street',
-            contact_person: 'Demo Person',
-            invoice_email: 'invoice@demo.com',
-            created_at: new Date().toISOString(),
-            supabase_user_id: 'mock-user-id',
-            maps_link: null,
-            additional_notes: null
-          }
+          current_role: savedRole,
+          profile: {
+            customer: mockCustomer,
+            organizer: mockOrganizer,
+            available_roles: [Role.CLIENT, Role.ORGANIZER]
+          },
+          data: savedRole === Role.CLIENT ? mockCustomer : mockOrganizer
         });
         setLoading(false);
         return;
@@ -98,116 +121,127 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.warn('[Auth] VITE_SUPER_ADMIN_EMAIL is not set. Super Admin fallback is disabled.');
     }
     if (SUPER_ADMIN_EMAIL && supabaseUser.email === SUPER_ADMIN_EMAIL) {
+      const adminData: SuperAdmin = {
+        id: 0,
+        first_name: 'Admin',
+        last_name: 'User',
+        email: SUPER_ADMIN_EMAIL
+      };
       setUser({
-        role: Role.SUPER_ADMIN,
-        data: {
-          id: 0, // Dummy id, as there's no DB table for admins
-          first_name: 'Admin',
-          last_name: 'User',
-          email: SUPER_ADMIN_EMAIL
-        }
+        current_role: Role.SUPER_ADMIN,
+        profile: {
+          super_admin: adminData,
+          available_roles: [Role.SUPER_ADMIN]
+        },
+        data: adminData
       });
       return;
     }
 
-    // Try to fetch from customers first
-    let { data: customerData } = await supabase.from('customers').select('*').eq('supabase_user_id', supabaseUser.id).single();
+    // Fetch all available profiles for this user
+    const { data: customerData } = await supabase.from('customers').select('*').eq('supabase_user_id', supabaseUser.id).single();
+    const { data: organizerData } = await supabase.from('organizers').select('*').eq('supabase_user_id', supabaseUser.id).single();
+    
+    const availableRoles: Role[] = [];
+    const profile: UserProfile = { available_roles: [] };
+    
     if (customerData) {
-      setUser({ role: Role.CLIENT, data: customerData });
-      return;
+      availableRoles.push(Role.CLIENT);
+      profile.customer = customerData;
     }
-
-    // If not a customer, try to fetch from organizers
-    let { data: organizerData } = await supabase.from('organizers').select('*').eq('supabase_user_id', supabaseUser.id).single();
     if (organizerData) {
-      setUser({ role: Role.ORGANIZER, data: organizerData });
-      return;
+      availableRoles.push(Role.ORGANIZER);
+      profile.organizer = organizerData;
     }
+    
+    profile.available_roles = availableRoles;
+    
+    if (availableRoles.length === 0) {
 
-    // If no profile found, it might be the first login after signup.
-    // Try to create a profile from metadata stored during signup.
-    const { app_role, ...profileData } = supabaseUser.user_metadata;
-    if (app_role && (profileData.first_name || profileData.organizer_name)) {
+      // If no profile found, try to create from metadata
+      const { app_role, ...profileData } = supabaseUser.user_metadata;
+      if (app_role && (profileData.first_name || profileData.organizer_name)) {
         let insertError;
-        let newProfile;
 
         if (app_role === Role.CLIENT) {
-            const { error } = await supabase.from('customers').insert({
-                first_name: profileData.first_name,
-                last_name: profileData.last_name,
-                email: supabaseUser.email,
-                supabase_user_id: supabaseUser.id,
-                prefix: profileData.prefix,
-                country_code: profileData.country_code,
-                gender: profileData.gender,
-                birthday: profileData.birthday,
-                id_number: profileData.id_number,
-                phone: profileData.phone,
-            });
-            insertError = error;
-            if(!error) {
-                const { data: freshCustomerData } = await supabase.from('customers').select('*').eq('supabase_user_id', supabaseUser.id).single();
-                if (freshCustomerData) {
-                    newProfile = { role: Role.CLIENT, data: freshCustomerData };
-                }
+          const { error } = await supabase.from('customers').insert({
+            first_name: profileData.first_name,
+            last_name: profileData.last_name,
+            email: supabaseUser.email,
+            supabase_user_id: supabaseUser.id,
+            prefix: profileData.prefix,
+            country_code: profileData.country_code,
+            gender: profileData.gender,
+            birthday: profileData.birthday,
+            id_number: profileData.id_number,
+            phone: profileData.phone,
+          });
+          insertError = error;
+          if (!error) {
+            const { data: freshCustomerData } = await supabase.from('customers').select('*').eq('supabase_user_id', supabaseUser.id).single();
+            if (freshCustomerData) {
+              profile.customer = freshCustomerData;
+              availableRoles.push(Role.CLIENT);
             }
+          }
         } else if (app_role === Role.ORGANIZER) {
-            const { error } = await supabase.from('organizers').insert({
-                organizer_name: profileData.organizer_name,
-                email: supabaseUser.email,
-                supabase_user_id: supabaseUser.id,
-                phone: profileData.phone,
-                business_type: profileData.business_type,
-                maps_link: profileData.maps_link || null,
-                company_name: profileData.company_name,
-                tax_id: profileData.tax_id,
-                billing_address: profileData.billing_address,
-                contact_person: profileData.contact_person,
-                invoice_email: profileData.invoice_email,
-                additional_notes: profileData.additional_notes || null
-            });
-            insertError = error;
-            if(!error) {
-                const { data: freshOrganizerData } = await supabase.from('organizers').select('*').eq('supabase_user_id', supabaseUser.id).single();
-                if(freshOrganizerData) newProfile = { role: Role.ORGANIZER, data: freshOrganizerData };
+          const { error } = await supabase.from('organizers').insert({
+            organizer_name: profileData.organizer_name,
+            email: supabaseUser.email,
+            supabase_user_id: supabaseUser.id,
+            phone: profileData.phone,
+            business_type: profileData.business_type,
+            maps_link: profileData.maps_link || null,
+            company_name: profileData.company_name,
+            tax_id: profileData.tax_id,
+            billing_address: profileData.billing_address,
+            contact_person: profileData.contact_person,
+            invoice_email: profileData.invoice_email,
+            additional_notes: profileData.additional_notes || null
+          });
+          insertError = error;
+          if (!error) {
+            const { data: freshOrganizerData } = await supabase.from('organizers').select('*').eq('supabase_user_id', supabaseUser.id).single();
+            if (freshOrganizerData) {
+              profile.organizer = freshOrganizerData;
+              availableRoles.push(Role.ORGANIZER);
             }
+          }
         }
 
         if (insertError) {
-            console.error("Error creating user profile from metadata:", insertError);
-            setUser(null);
-        } else if (newProfile) {
-            setUser(newProfile);
-            // Clean up metadata to prevent re-creation
-            const newMetaData = { ...supabaseUser.user_metadata };
-            delete newMetaData.app_role;
-            // Client fields
-            delete newMetaData.first_name;
-            delete newMetaData.last_name;
-            delete newMetaData.prefix;
-            delete newMetaData.country_code;
-            delete newMetaData.gender;
-            delete newMetaData.birthday;
-            delete newMetaData.id_number;
-            // Organizer fields
-            delete newMetaData.organizer_name;
-            delete newMetaData.business_type;
-            delete newMetaData.maps_link;
-            delete newMetaData.company_name;
-            delete newMetaData.tax_id;
-            delete newMetaData.billing_address;
-            delete newMetaData.contact_person;
-            delete newMetaData.invoice_email;
-            delete newMetaData.additional_notes;
-            // Shared field
-            delete newMetaData.phone;
-            await supabase.auth.updateUser({ data: newMetaData });
+          console.error("Error creating user profile from metadata:", insertError);
+          setUser(null);
+          return;
         }
+        
+        profile.available_roles = availableRoles;
+      }
+      
+      if (availableRoles.length === 0) {
+        console.warn("User is logged in but no profile found in customers or organizers table.");
+        setUser(null);
         return;
+      }
     }
-
-    console.warn("User is logged in but no profile found in customers or organizers table.");
-    setUser(null); // Or handle as a pending state
+    
+    // Determine current role from localStorage or default to first available
+    const savedRole = localStorage.getItem('preferred_role') as Role;
+    const currentRole = savedRole && availableRoles.includes(savedRole) ? savedRole : availableRoles[0];
+    
+    const currentData = currentRole === Role.CLIENT ? profile.customer : 
+                       currentRole === Role.ORGANIZER ? profile.organizer : 
+                       profile.super_admin;
+    
+    if (currentData) {
+      setUser({
+        current_role: currentRole,
+        profile,
+        data: currentData
+      });
+    } else {
+      setUser(null);
+    }
   }, []);
 
   const openAuthModal = useCallback((defaultTab: 'login' | 'register' = 'login', defaultRole: Role = Role.CLIENT) => {
@@ -296,12 +330,161 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
   
-  // FIX: Added setAuthModalRole to the context value and dependency array
+  const switchRole = useCallback(async (newRole: Role) => {
+    if (!user || !user.profile.available_roles.includes(newRole)) {
+      console.error('Cannot switch to unavailable role');
+      return;
+    }
+    
+    const newData = newRole === Role.CLIENT ? user.profile.customer : 
+                   newRole === Role.ORGANIZER ? user.profile.organizer : 
+                   user.profile.super_admin;
+    
+    if (newData) {
+      setUser({
+        current_role: newRole,
+        profile: user.profile,
+        data: newData
+      });
+      localStorage.setItem('preferred_role', newRole);
+    }
+  }, [user]);
+  
+  const addRole = useCallback(async (role: Role, data: any): Promise<{ error: Error | null }> => {
+    if (!user) {
+      return { error: new Error('User not logged in') };
+    }
+    
+    // Check if Supabase is properly configured
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.warn('Mock mode - simulating role addition');
+      
+      // Mock mode: simulate adding role
+      if (role === Role.CLIENT && !user.profile.customer) {
+        const mockCustomer: Customer = {
+          id: Math.floor(Math.random() * 10000),
+          ...data,
+          email: 'demo@user.com',
+          created_at: new Date().toISOString(),
+          supabase_user_id: 'mock-user-id'
+        };
+        
+        const updatedProfile = {
+          ...user.profile,
+          customer: mockCustomer,
+          available_roles: [...user.profile.available_roles, Role.CLIENT]
+        };
+        
+        setUser({
+          current_role: Role.CLIENT,
+          profile: updatedProfile,
+          data: mockCustomer
+        });
+        localStorage.setItem('preferred_role', Role.CLIENT);
+        return { error: null };
+      } else if (role === Role.ORGANIZER && !user.profile.organizer) {
+        const mockOrganizer: Organizer = {
+          id: Math.floor(Math.random() * 10000),
+          ...data,
+          email: 'demo@user.com',
+          created_at: new Date().toISOString(),
+          supabase_user_id: 'mock-user-id',
+          maps_link: null,
+          additional_notes: null
+        };
+        
+        const updatedProfile = {
+          ...user.profile,
+          organizer: mockOrganizer,
+          available_roles: [...user.profile.available_roles, Role.ORGANIZER]
+        };
+        
+        setUser({
+          current_role: Role.ORGANIZER,
+          profile: updatedProfile,
+          data: mockOrganizer
+        });
+        localStorage.setItem('preferred_role', Role.ORGANIZER);
+        return { error: null };
+      }
+      
+      return { error: new Error('Role already exists') };
+    }
+    
+    // Get current Supabase user
+    const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+    if (!supabaseUser) {
+      return { error: new Error('No authenticated user') };
+    }
+    
+    try {
+      if (role === Role.CLIENT && !user.profile.customer) {
+        const { error } = await supabase.from('customers').insert({
+          ...data,
+          email: supabaseUser.email,
+          supabase_user_id: supabaseUser.id
+        });
+        
+        if (error) throw error;
+        
+        // Fetch the newly created profile
+        const { data: newCustomer } = await supabase.from('customers').select('*').eq('supabase_user_id', supabaseUser.id).single();
+        if (newCustomer) {
+          const updatedProfile = {
+            ...user.profile,
+            customer: newCustomer,
+            available_roles: [...user.profile.available_roles, Role.CLIENT]
+          };
+          setUser({
+            current_role: Role.CLIENT,
+            profile: updatedProfile,
+            data: newCustomer
+          });
+          localStorage.setItem('preferred_role', Role.CLIENT);
+        }
+      } else if (role === Role.ORGANIZER && !user.profile.organizer) {
+        const { error } = await supabase.from('organizers').insert({
+          ...data,
+          email: supabaseUser.email,
+          supabase_user_id: supabaseUser.id
+        });
+        
+        if (error) throw error;
+        
+        // Fetch the newly created profile
+        const { data: newOrganizer } = await supabase.from('organizers').select('*').eq('supabase_user_id', supabaseUser.id).single();
+        if (newOrganizer) {
+          const updatedProfile = {
+            ...user.profile,
+            organizer: newOrganizer,
+            available_roles: [...user.profile.available_roles, Role.ORGANIZER]
+          };
+          setUser({
+            current_role: Role.ORGANIZER,
+            profile: updatedProfile,
+            data: newOrganizer
+          });
+          localStorage.setItem('preferred_role', Role.ORGANIZER);
+        }
+      }
+      
+      return { error: null };
+    } catch (error) {
+      console.error('Error adding role:', error);
+      return { error: error as Error };
+    }
+  }, [user]);
+
   const value = useMemo(() => ({ 
     user, 
     login, 
     logout, 
     register,
+    switchRole,
+    addRole,
     isAuthModalOpen,
     openAuthModal,
     closeAuthModal,
@@ -309,7 +492,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthModalTab,
     authModalRole,
     setAuthModalRole
-  }), [user, login, logout, register, isAuthModalOpen, openAuthModal, closeAuthModal, authModalTab, setAuthModalTab, authModalRole, setAuthModalRole]);
+  }), [user, login, logout, register, switchRole, addRole, isAuthModalOpen, openAuthModal, closeAuthModal, authModalTab, setAuthModalTab, authModalRole, setAuthModalRole]);
 
   return (
     <AuthContext.Provider value={value}>

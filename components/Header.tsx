@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Role } from '../types';
+import RoleSwitcher from './RoleSwitcher';
 
 const Header: React.FC = () => {
   const { user, logout, openAuthModal } = useAuth();
@@ -14,7 +15,7 @@ const Header: React.FC = () => {
   const getUserDisplayName = () => {
     if (!user) return '';
     try {
-      switch (user.role) {
+      switch (user.current_role) {
         case Role.CLIENT: {
           const name = (user as any).data?.first_name || (user as any).data?.last_name;
           return name || 'User';
@@ -46,7 +47,7 @@ const Header: React.FC = () => {
           <nav className="hidden md:flex items-center space-x-8">
             <NavLink to="/" className={navLinkClass} aria-label="Home">HOME</NavLink>
             <NavLink to="/organizers" className={navLinkClass} aria-label="For organizers">ORGANIZER</NavLink>
-            {user?.role === Role.ORGANIZER && (
+            {user?.current_role === Role.ORGANIZER && (
               <NavLink to="/create-event" className={navLinkClass} aria-label="Create event">Create Event</NavLink>
             )}
              {user && (
@@ -61,8 +62,8 @@ const Header: React.FC = () => {
                     <span className="text-sm text-text-secondary">
                         Welcome, <span className="font-semibold text-text-primary">{getUserDisplayName()}</span>
                     </span>
-                    <span className="text-xs font-semibold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">{user.role}</span>
                 </div>
+                <RoleSwitcher />
                 <button
                   onClick={logout}
                   className="px-4 py-2 text-sm font-semibold text-text-primary bg-surface border border-border rounded-md hover:bg-border transition-colors"

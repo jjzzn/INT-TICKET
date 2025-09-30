@@ -46,11 +46,20 @@ export type SuperAdmin = {
   email: string;
 }
 
-// Auth user type
-export type AuthUser = 
-  | { role: Role.CLIENT; data: Customer }
-  | { role: Role.ORGANIZER; data: Organizer }
-  | { role: Role.SUPER_ADMIN; data: SuperAdmin };
+// Multi-role profile type
+export type UserProfile = {
+  customer?: Customer;
+  organizer?: Organizer;
+  super_admin?: SuperAdmin;
+  available_roles: Role[];
+}
+
+// Auth user type with multi-role support
+export type AuthUser = {
+  current_role: Role;
+  profile: UserProfile;
+  data: Customer | Organizer | SuperAdmin;
+};
 
 
 // Auto-generated Supabase types
