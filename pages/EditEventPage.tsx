@@ -202,7 +202,7 @@ const EditEventPage: React.FC = () => {
     // Load event data
     useEffect(() => {
         const loadEventData = async () => {
-            if (!id || !user || user.role !== Role.ORGANIZER) {
+            if (!id || !user || user.current_role !== Role.ORGANIZER) {
                 navigate('/dashboard');
                 return;
             }

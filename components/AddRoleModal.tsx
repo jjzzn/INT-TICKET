@@ -81,7 +81,7 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
         }
       }
     } catch (err: any) {
-      setError(err.message || 'เกิดข้อผิดพลาดในการเพิ่มบทบาท');
+      setError(err.message || 'Error adding role');
     } finally {
       setLoading(false);
     }
@@ -92,7 +92,7 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            คำนำหน้า
+            Prefix
           </label>
           <select
             value={clientData.prefix}
@@ -100,14 +100,14 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             required
           >
-            <option value="Mr.">นาย</option>
-            <option value="Mrs.">นาง</option>
-            <option value="Ms.">นางสาว</option>
+            <option value="Mr.">Mr.</option>
+            <option value="Mrs.">Mrs.</option>
+            <option value="Ms.">Ms.</option>
           </select>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            เพศ
+            Gender
           </label>
           <select
             value={clientData.gender}
@@ -115,9 +115,9 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             required
           >
-            <option value="Male">ชาย</option>
-            <option value="Female">หญิง</option>
-            <option value="Other">อื่นๆ</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
           </select>
         </div>
       </div>
@@ -125,7 +125,7 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            ชื่อ
+            First Name
           </label>
           <input
             type="text"
@@ -137,7 +137,7 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            นามสกุล
+            Last Name
           </label>
           <input
             type="text"
@@ -151,7 +151,7 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          วันเกิด
+          Birthday
         </label>
         <input
           type="date"
@@ -164,7 +164,7 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          เลขบัตรประชาชน
+          ID Number
         </label>
         <input
           type="text"
@@ -178,7 +178,7 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          เบอร์โทรศัพท์
+          Phone Number
         </label>
         <div className="flex gap-2">
           <select
@@ -221,7 +221,7 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          ชื่อผู้จัดงาน
+          Organizer Name
         </label>
         <input
           type="text"
@@ -234,7 +234,7 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          ชื่อบริษัท
+          Company Name
         </label>
         <input
           type="text"
@@ -247,7 +247,7 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          ประเภทธุรกิจ
+          Business Type
         </label>
         <select
           value={organizerData.business_type}
@@ -255,17 +255,17 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
           required
         >
-          <option value="">เลือกประเภทธุรกิจ</option>
-          <option value="Company">บริษัท</option>
-          <option value="Individual">บุคคลธรรมดา</option>
-          <option value="Non-profit">องค์กรไม่แสวงหากำไร</option>
-          <option value="Other">อื่นๆ</option>
+          <option value="">Select Business Type</option>
+          <option value="Company">Company</option>
+          <option value="Individual">Individual</option>
+          <option value="Non-profit">Non-profit</option>
+          <option value="Other">Other</option>
         </select>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          เลขประจำตัวผู้เสียภาษี
+          Tax ID
         </label>
         <input
           type="text"
@@ -278,7 +278,7 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          ที่อยู่สำหรับออกใบเสร็จ
+          Billing Address
         </label>
         <textarea
           value={organizerData.billing_address}
@@ -291,7 +291,7 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          ชื่อผู้ติดต่อ
+          Contact Person
         </label>
         <input
           type="text"
@@ -304,7 +304,7 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          เบอร์โทรศัพท์
+          Phone Number
         </label>
         <div className="flex gap-2">
           <select
@@ -342,7 +342,7 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          อีเมลสำหรับออกใบเสร็จ
+          Invoice Email
         </label>
         <input
           type="email"
@@ -359,16 +359,16 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
 
   const modalContent = (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-70 z-[9999] flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black bg-opacity-70 z-[9999] flex items-center justify-center p-4"
       onClick={onClose}
       aria-modal="true"
       role="dialog"
     >
       <div 
-        className="bg-card rounded-lg shadow-xl w-full max-w-lg my-8"
+        className="bg-card rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 sm:p-8 relative">
+        <div className="p-6 sm:p-8 relative border-b border-gray-200 flex-shrink-0">
           <button 
             onClick={onClose} 
             className="absolute top-4 right-4 text-text-secondary hover:text-text-primary transition"
@@ -376,11 +376,13 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
             <XIcon className="w-6 h-6" />
           </button>
           
-          <h2 className="text-2xl font-bold text-text-primary mb-6">
-            เพิ่มบทบาท{role === Role.CLIENT ? 'ลูกค้า' : 'ผู้จัดงาน'}
+          <h2 className="text-2xl font-bold text-text-primary">
+            Add {role === Role.CLIENT ? 'Client' : 'Organizer'} Role
           </h2>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="overflow-y-auto px-6 sm:px-8 py-4 flex-1">
             {role === Role.CLIENT ? renderClientForm() : renderOrganizerForm()}
 
             {error && (
@@ -388,25 +390,25 @@ const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose, role }) =>
                 <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
+          </div>
 
-            <div className="mt-6 flex gap-3 justify-end">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                ยกเลิก
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-secondary rounded-md hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
-                {loading ? 'กำลังเพิ่ม...' : 'เพิ่มบทบาท'}
-              </button>
-            </div>
-          </form>
-        </div>
+          <div className="p-6 sm:p-8 border-t border-gray-200 flex gap-3 justify-end flex-shrink-0">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-secondary rounded-md hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {loading ? 'Adding...' : 'Add Role'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

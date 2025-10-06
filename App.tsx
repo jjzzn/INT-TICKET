@@ -24,7 +24,7 @@ const OrganizerRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   if (!user) {
     return <Navigate to="/" />;
   }
-  if (user.role !== Role.ORGANIZER) {
+  if (user.current_role !== Role.ORGANIZER) {
     return <Navigate to="/dashboard" />;
   }
   return <>{children}</>;

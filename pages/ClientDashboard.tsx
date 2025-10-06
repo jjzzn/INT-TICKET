@@ -39,7 +39,7 @@ const ClientDashboard: React.FC = () => {
 
   useEffect(() => {
     const fetchTickets = async () => {
-        if (!user || user.role !== Role.CLIENT) {
+        if (!user || user.current_role !== Role.CLIENT) {
             setLoading(false);
             return;
         }

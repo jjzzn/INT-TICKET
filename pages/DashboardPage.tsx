@@ -9,7 +9,7 @@ const DashboardPage: React.FC = () => {
   const { user } = useAuth();
 
   const renderDashboard = () => {
-    switch (user?.role) {
+    switch (user?.current_role) {
       case Role.CLIENT:
         return <ClientDashboard />;
       case Role.ORGANIZER:
@@ -28,7 +28,7 @@ const DashboardPage: React.FC = () => {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6 text-text-primary">
-        {user.role} Dashboard
+        {user.current_role} Dashboard
       </h1>
       {renderDashboard()}
     </div>

@@ -14,7 +14,7 @@ const OrganizerDashboard: React.FC = () => {
 
   useEffect(() => {
     const fetchOrganizerEvents = async () => {
-        if (!user || user.role !== Role.ORGANIZER) {
+        if (!user || user.current_role !== Role.ORGANIZER) {
             setLoading(false);
             return;
         }

@@ -306,7 +306,7 @@ const CreateEventPage: React.FC = () => {
             return;
         }
 
-        if (!user || user.role !== Role.ORGANIZER) {
+        if (!user || user.current_role !== Role.ORGANIZER) {
             alert('You must be logged in as an organizer to create an event.');
             return;
         }

@@ -16,7 +16,7 @@ const ForOrganizersPage: React.FC = () => {
 
     const handleCTAClick = () => {
         if (user) {
-            if (user.role === Role.ORGANIZER) {
+            if (user.current_role === Role.ORGANIZER) {
                 navigate('/create-event');
             } else {
                 alert('You are currently logged in as a client. Please log out and register as an organizer to create events.');

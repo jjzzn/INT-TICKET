@@ -65,7 +65,7 @@ const BuyTicketPage: React.FC = () => {
     }, [eventId, tierId]);
 
     const handlePurchase = async () => {
-        if (!user || user.role !== Role.CLIENT || !eventId || !tierId || !tier) {
+        if (!user || user.current_role !== Role.CLIENT || !eventId || !tierId || !tier) {
             setPurchaseError('An unexpected error occurred. Please log in as a client and try again.');
             return;
         }
@@ -111,7 +111,7 @@ const BuyTicketPage: React.FC = () => {
     if (loading) return <div className="text-center p-10">Loading checkout...</div>;
     if (loadingError) return <div className="text-center p-10 text-red-500">{loadingError}</div>;
     if (!event || !tier) return <div className="text-center p-10 text-red-500">Event or ticket details not found.</div>;
-    if (user?.role !== Role.CLIENT) return <div className="text-center p-10 text-red-500">Only clients can purchase tickets.</div>;
+    if (user?.current_role !== Role.CLIENT) return <div className="text-center p-10 text-red-500">Only clients can purchase tickets.</div>;
 
 
     return (

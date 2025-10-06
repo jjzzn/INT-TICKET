@@ -26,11 +26,11 @@ const RoleSwitcher: React.FC = () => {
   const getRoleLabel = (role: Role) => {
     switch (role) {
       case Role.CLIENT:
-        return 'ลูกค้า';
+        return 'Client';
       case Role.ORGANIZER:
-        return 'ผู้จัดงาน';
+        return 'Organizer';
       case Role.SUPER_ADMIN:
-        return 'ผู้ดูแลระบบ';
+        return 'Super Admin';
       default:
         return role;
     }
@@ -85,7 +85,7 @@ const RoleSwitcher: React.FC = () => {
             <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
               <div className="py-1">
                 <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">
-                  บทบาทปัจจุบัน
+                  Current Role
                 </div>
                 {user.profile.available_roles.map((role) => (
                   <button
@@ -111,7 +111,7 @@ const RoleSwitcher: React.FC = () => {
                   <>
                     <div className="border-t border-gray-200 my-1" />
                     <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">
-                      เพิ่มบทบาท
+                      Add Role
                     </div>
                     {availableRolesToAdd.map((role) => (
                       <button
@@ -122,7 +122,7 @@ const RoleSwitcher: React.FC = () => {
                         <div className="p-1.5 rounded bg-gray-100 text-gray-600">
                           <PlusIcon className="w-4 h-4" />
                         </div>
-                        <span>เพิ่ม{getRoleLabel(role)}</span>
+                        <span>Add {getRoleLabel(role)}</span>
                       </button>
                     ))}
                   </>
